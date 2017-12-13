@@ -1,5 +1,5 @@
 var mongoose = require('mongoose');
-var Survey = mongoose.model("Survey");
+var Question = mongoose.model("Question");
 var User = mongoose.model("User");
 
 
@@ -29,6 +29,32 @@ module.exports = {
     })
   },
 
+  allQuestion: function(req, res) {
+    console.log("controller all question");
+    Question.find({}).sort('createdAt').exec(function(err, questions) {
+      if (err) {
+        console.log("fail get questions", err);
+        res.json({err:err});
+      }
+      res.json(questions);
+    })
+  },
+
+
+  oneQueston: function(req, res) {
+    console.log("one one one",req.params.id);
+    console.log("back end oneProduct");
+    Question.findOne({_id: req.params.id}, function(err, data) {
+      if (err) {
+        console.log('one question back end');
+      }
+      else {
+        console.log(data);
+        res.json(data);
+      }
+    })
+  },
+
   login: function(req, res) {
     console.log(req.body);
     console.log("from controller login: ", req.body.email);
@@ -42,6 +68,48 @@ module.exports = {
       }
     })
   },
+
+  // create new question by user
+  create: function(req, res) {
+    User.findOne({_id: req.params.id}, function(err, user) {
+      console.log("controller create route", req.params.id, user);
+      var question = new Question(req.body);
+      question._user = user._id;
+      user._questions.push(question);
+      question.save(function(err) {
+        if (err) {
+          console.log(err);
+          res.json('unsuccessfully');
+        }
+        else {
+          user.save(function(err) {
+            if (err) {
+              res.json('unsuccessfully');
+            }
+            else {
+              console.log(question);
+              res.json('success');
+            }
+          })
+        }
+      })
+    })
+  },
+
+  destroy: function(req, res) {
+  console.log("back-end destroy method");
+  Question.remove({_id: req.params.id}, function(err) {
+    console.log(req.params.id);
+    if (err) {
+      console.log("Delete ERROR", err);
+      res.json({err:err});
+    }
+    else {
+      console.log("delete Success");
+      res.redirect(303, "/questions");
+    }
+  })
+}
 
 
 }
