@@ -1,8 +1,8 @@
 var mongoose = require('mongoose');
+var path = require("path");
 var Question = mongoose.model("Question");
 var User = mongoose.model("User");
-
-
+var Answer = mongoose.model("Answer");
 
 module.exports = {
 
@@ -31,7 +31,7 @@ module.exports = {
 
   allQuestion: function(req, res) {
     console.log("controller all question");
-    Question.find({}).sort('createdAt').exec(function(err, questions) {
+    Question.find({}).populate("_user").sort('createdAt').exec(function(err, questions) {
       if (err) {
         console.log("fail get questions", err);
         res.json({err:err});
@@ -40,17 +40,50 @@ module.exports = {
     })
   },
 
-
-  oneQueston: function(req, res) {
-    console.log("one one one",req.params.id);
-    console.log("back end oneProduct");
-    Question.findOne({_id: req.params.id}, function(err, data) {
-      if (err) {
-        console.log('one question back end');
+  oneQuestion: function(req, res) {
+    Question.findOne({_id: req.params.id}).populate({path: "_answers", populate: {path: "_user"}}).exec(function(err, question) {
+      // console.log("from controller getOneQuestion: ", question);
+      if(err) {
+        console.log("from controller getOneQuestion err: ", err);
       }
       else {
-        console.log(data);
-        res.json(data);
+        // console.log("from controller getOneQuestion question: ", question);
+        res.json(question);
+        console.log(question);
+      }
+    })
+  },
+
+  // like function 
+
+  like: function(req, res) {
+    console.log("controller like");
+    Answer.findOne({_id: req.params.id}, function(err, answer) {
+      if(err) {
+        console.log("can't like this answer");
+      }
+      else {
+        console.log("incrementing like this", answer);
+        answer.likes += 1;
+        answer.save(function(err) {
+          if(err) {
+            console.log("err from like in controller");
+          } 
+          else {
+            console.log("like++ now");
+          }
+        })
+      }
+    })
+  },
+
+  search: function(req, res) {
+    Question.find({content: {$regex: req.body.search}}).sort({updatedAt: "desc"}).exec(function(err, question) {
+      if(err) {
+        console.log("from controller search error: ", err);
+      }
+      else {
+        res.json(question);
       }
     })
   },
@@ -68,6 +101,60 @@ module.exports = {
       }
     })
   },
+
+  // create new answer by current login user 
+  createAns: function(req, res) {
+    var quesId = req.params.question_id;
+    var userId = req.params.user_id;
+    var answer = new Answer(req.body);
+    answer.likes = 0;
+    // add answers with question
+    Question.findOne({_id: quesId}, function(err, ques){
+      console.log("controller create answer", ques);
+      answer._questions = ques._id;
+      answer.save(function(err) {
+        if(err) {
+          console.log("can't save this answer with the question");
+        }
+        else {
+          ques._answers.push(answer);
+          ques.save(function(err) {
+            if(err) {
+              console.log("controller createAns after finding the question then save the answer to it");
+            }
+            else {
+              console.log("answer created success");
+            }
+          })
+        }
+      })
+    })
+    // save this anwers into this specific user 
+    User.findOne({_id: userId}, function(err, user){
+      console.log("controller save answer to this login user", user);
+      answer._user = user._id;
+      answer.save(function(err) {
+        if(err) {
+          console.log("answer can't save to the user");
+        }
+        else {
+          user.save(function(err) {
+            user._answers.push(answer);
+            user.save(function(err) {
+              if(err) {
+                console.log("final err in createAns");
+              }
+              else {
+                console.log("answer save to the user");
+              }
+            })
+          })
+        }
+      })
+    })
+  },
+
+
 
   // create new question by user
   create: function(req, res) {

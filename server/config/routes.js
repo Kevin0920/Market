@@ -16,14 +16,27 @@ module.exports = function(app){
     questions.create(req, res);
   })
 
+  app.post('/like/:id', (req, res, next)=>{
+    questions.like(req, res);
+  })
+
+  app.post("/search", function(req, res) {
+    questions.search(req, res);
+  })
+
+  // create answer route
+  app.post('/answers/:question_id/:user_id', function(req, res) {
+    questions.createAns(req, res);
+  })
+
   app.get('/questions', function(req, res) {
     console.log('all questions route');
     questions.allQuestion(req, res);
   })
-
-  app.get('/questions/:id', (req, res, next)=>{
+  // retrieve one question
+  app.get('/question/:id', (req, res, next)=>{
     console.log('one question route js');
-    questions.oneQueston(req, res);
+    questions.oneQuestion(req, res);
   })
 
   app.delete('/questions/:id',(req,res,next)=>{

@@ -10,10 +10,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "angular-font-awesome": "^3.0.3",
     "body-parser": "^1.18.2",
     "ejs": "^2.5.7",
     "express": "^4.16.2",
     "express-session": "^1.15.6",
+    "font-awesome": "^4.7.0",
     "mongoose": "^4.13.2"
   }
 }
