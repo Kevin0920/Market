@@ -3,7 +3,7 @@ var path = require('path');
 
 var fs = require('fs');
 
-mongoose.connect('mongodb://localhost/q&a');
+mongoose.connect('mongodb://localhost/fullPro');
 
 var models_path = path.join(__dirname, './../models');
 

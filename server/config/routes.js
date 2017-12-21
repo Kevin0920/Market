@@ -29,18 +29,49 @@ module.exports = function(app){
     questions.createAns(req, res);
   })
 
+  //create product route
+  app.post('/products/user/:id', function(req, res) {
+    questions.createPro(req, res);
+  })
+
   app.get('/questions', function(req, res) {
     console.log('all questions route');
     questions.allQuestion(req, res);
   })
+
+  app.get('/products', function(req, res) {
+    console.log('all products route');
+    questions.allProduct(req, res);
+  })
+
+  // display
+  app.get('/products', function(req, res) {
+    console.log("display route");
+    questions.displayAll(req, res);
+  })
+
   // retrieve one question
   app.get('/question/:id', (req, res, next)=>{
     console.log('one question route js');
     questions.oneQuestion(req, res);
   })
 
-  app.delete('/questions/:id',(req,res,next)=>{
+  // update one product detail
+  app.put('/products/:id', (req, res, next)=>{
+    console.log("update one product route");
+    questions.oneProduct(req, res);
+  })
+
+  app.delete('/questions/:id',(req, res, next)=>{
     questions.destroy(req, res);
+  })
+
+  app.delete('/products/:id', (req, res)=>{
+    questions.destroyPro(req, res);
+  })
+
+  app.get('/products/:id/user', (req, res)=>{
+    questions.findPoster(req, res);
   })
 
 	app.all("*",function(req,res){

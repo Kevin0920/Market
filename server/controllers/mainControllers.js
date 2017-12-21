@@ -3,6 +3,7 @@ var path = require("path");
 var Question = mongoose.model("Question");
 var User = mongoose.model("User");
 var Answer = mongoose.model("Answer");
+var Product = mongoose.model("Product");
 
 module.exports = {
 
@@ -28,6 +29,30 @@ module.exports = {
       }
     })
   },
+  
+  login: function(req, res) {
+    console.log(req.body);
+    console.log("from controller login: ", req.body.email);
+    User.findOne({email: req.body.email, password: req.body.password}, function(err, user) {
+      if (err) {
+        console.log("can't find this user email from controller", err);
+      } 
+      else {
+        if (user === null) {
+          res.json({message:"can't find this email", user: null}); 
+        }
+        else {
+          if(user.password === req.body.password) {
+            res.json({message:"success", user:user});
+          }
+          else {
+            res.json({message:"The password is incorrect", user:null});
+          }
+        }
+      }
+    })
+  },
+
 
   allQuestion: function(req, res) {
     console.log("controller all question");
@@ -37,6 +62,17 @@ module.exports = {
         res.json({err:err});
       }
       res.json(questions);
+    })
+  },
+
+  allProduct: function(req, res) {
+    console.log("controller all products");
+    Product.find({}).populate("_user").sort("createdAt").exec(function(err, products) {
+      if (err) {
+        console.log("can't find products");
+        res.json({err: err});
+      }
+      res.json(products);
     })
   },
 
@@ -55,7 +91,6 @@ module.exports = {
   },
 
   // like function 
-
   like: function(req, res) {
     console.log("controller like");
     Answer.findOne({_id: req.params.id}, function(err, answer) {
@@ -84,20 +119,6 @@ module.exports = {
       }
       else {
         res.json(question);
-      }
-    })
-  },
-
-  login: function(req, res) {
-    console.log(req.body);
-    console.log("from controller login: ", req.body.email);
-    User.findOne({email: req.body.email, password: req.body.password}, function(err, user) {
-      if (err) {
-        console.log("can't find this user email from controller", err);
-      }
-      else {
-        console.log("successfully login", user);
-        res.json(user);
       }
     })
   },
@@ -183,6 +204,34 @@ module.exports = {
     })
   },
 
+  // create product route
+  createPro: function(req, res) {
+    console.log(req.params.id);
+    const product = new Product(req.body);
+    User.findOne({_id: req.params.id}, function(err, user) {
+      product._user = user._id;
+      product.save(function(err) {
+        if(err) {
+          console.log("can't create product");
+          res.json("unsuccess create product");
+        }
+        else {
+          user._products.push(product);
+          console.log("user product push controller");
+          user.save(function(err) {
+            if(err) {
+              res.json("user self can't create product");
+            }
+            else {
+              console.log(product);
+              res.json("success create product");
+            }
+          })
+        }
+      })
+    })
+  },
+
   destroy: function(req, res) {
   console.log("back-end destroy method");
   Question.remove({_id: req.params.id}, function(err) {
@@ -194,6 +243,68 @@ module.exports = {
     else {
       console.log("delete Success");
       res.redirect(303, "/questions");
+    }
+  })
+},
+
+destroyPro: function(req, res) {
+  console.log("b-e dest prod method");
+  Product.remove({_id: req.params.id}, function(err) {
+    console.log(req.params.id);
+    if (err) {
+      res.json({err:err});
+    }
+    res.redirect(303, "/products");
+  })
+},
+
+oneProduct: function(req, res) {
+  // console.log("b-e update method", req.body.image);
+  Product.findOne({_id: req.params.id}, function(err, product) {
+    if (err) {
+      res.json({err:err});
+      console.log("update unsuccessfully");
+    }
+    else {
+      product.image = req.body.image;
+      product.title = req.body.title;
+      product.location = req.body.location;
+      product.price = req.body.price;
+      product.description = req.body.description;
+      product.save(function(err) {
+        if (err) {
+          res.json("can't update this product",{err:err});
+        }
+        else {
+          res.json("update successfully");
+        }
+      })
+    }
+  })
+},
+
+findPoster: function(req, res) {
+  console.log('b-e find poster');
+  User.findOne({_id: req.params.id}, function(err, user) {
+    if (err) {
+      console.log("can't find poster");
+    }
+    else {
+      res.json(user);
+      // console.log(user);
+    }
+  })
+},
+
+displayAll: function(req, res) {
+  console.log('b-e display');
+  Product.find({}).sort({updatedAt: 'desc'}).exec(function(err, prods) {
+    if (err) {
+      console.log(err);
+      res.json({err:err});
+    }
+    else {
+      res.json(prods);
     }
   })
 }
